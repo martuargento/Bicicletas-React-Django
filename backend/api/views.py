@@ -70,8 +70,8 @@ def perfil(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def productos(request):
-    qs = Producto.objects.all().order_by('-id')
-    serializer = ProductoSerializer(qs, many=True)
+    productos = Producto.objects.all().order_by('-id')
+    serializer = ProductoSerializer(productos, many=True)
     return Response(serializer.data)
 
 # Nota: en settings.py el permiso por defecto es IsAuthenticated,
@@ -123,8 +123,8 @@ def eliminar_producto(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def pedidos(request):
-    qs = Pedido.objects.filter(usuario=request.user).order_by('-id')
-    serializer = PedidoSerializer(qs, many=True)
+    pedidos = Pedido.objects.filter(usuario=request.user).order_by('-id')
+    serializer = PedidoSerializer(pedidos, many=True)
     return Response(serializer.data)
 
 
