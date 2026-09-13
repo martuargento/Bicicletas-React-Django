@@ -71,7 +71,9 @@ def perfil(request):
 @permission_classes([AllowAny])
 def productos(request):
     productos = Producto.objects.all().order_by('-id')
+    #aca pasamos esos productos en formato objetos de django a JSON:
     serializer = ProductoSerializer(productos, many=True)
+    #y mandamos la respuesta ya en formato JSON
     return Response(serializer.data)
 
 # Nota: en settings.py el permiso por defecto es IsAuthenticated,
