@@ -1653,3 +1653,167 @@ La parte que no te enseñaron en el curso anterior era exactamente esta:
 Y eso es lo que ahora estamos tomando como siguiente etapa de aprendizaje.
 
 ---
+
+## Fecha: 2026-09-13
+
+### Conversacion 14
+
+#### Usuario
+no te preocupes, todo esto es de practica, bueno, me podrias seguir explicando?
+
+#### Asistente
+Si. Como ya vimos los conceptos generales, seguimos desde el punto pendiente: como una peticion recorre todo el proyecto para obtener los productos.
+
+## Modulo 2: Del navegador a la base de datos
+
+El flujo completo es:
+
+```text
+React
+    | GET /api/productos/
+Django: django_config/urls.py
+    |
+api/urls.py
+    |
+views.productos()
+    |
+Producto.objects.all()
+    |
+ProductoSerializer
+    |
+Response JSON
+    |
+React muestra los productos
+```
+
+En `backend/django_config/urls.py` aparece:
+
+```python
+path('api/', include('api.urls')),
+```
+
+Esto significa que toda URL que empiece con `/api/` debe buscarse dentro de `api/urls.py`. Cuando React solicita `/api/productos/`, Django busca `productos/` en `backend/api/urls.py`.
+
+En `backend/api/urls.py` la ruta es:
+
+```python
+path('productos/', productos, name='productos'),
+```
+
+La ruta conecta la URL con la funcion `productos` de `views.py`. `urls.py` decide que funcion llamar y `views.py` decide que debe hacer la aplicacion.
+
+En `backend/api/views.py` encontramos:
+
+```python
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def productos(request):
+        qs = Producto.objects.all().order_by('-id')
+        serializer = ProductoSerializer(qs, many=True)
+        return Response(serializer.data)
+```
+
+`@api_view(['GET'])` convierte una funcion normal en una vista compatible con Django REST Framework y permite solamente peticiones GET.
+
+`@permission_classes([AllowAny])` permite que cualquier persona consulte los productos sin iniciar sesion.
+
+`Producto.objects.all().order_by('-id')` busca todos los productos y los ordena por id descendente. El signo `-` indica orden descendente, por lo que aparecen primero los productos mas recientes. `qs` significa normalmente QuerySet: una consulta preparada para obtener objetos de la base de datos.
+
+La base de datos trabaja con objetos Python, pero React necesita JSON. Por eso se usa:
+
+```python
+serializer = ProductoSerializer(qs, many=True)
+```
+
+`ProductoSerializer` esta definido en `backend/api/serializers.py` y hereda de `ModelSerializer`. Su clase `Meta` indica el modelo `Producto` y los campos que pueden salir en la respuesta. Como `qs` contiene varios productos, se usa `many=True`.
+
+Finalmente:
+
+```python
+return Response(serializer.data)
+```
+
+El serializer funciona como traductor:
+
+```text
+Modelo Django -> Serializer -> JSON
+```
+
+## Modulo 3: React consume la respuesta
+
+En `frontend/src/Tienda.jsx` encontramos:
+
+```javascript
+useEffect(() => {
+    const cargarProductos = async () => {
+        try {
+            const { data } = await api.get('/productos/')
+            setProductos(data)
+        } catch (error) {
+            console.error('Error al cargar productos:', error)
+        }
+    }
+
+    cargarProductos()
+}, [])
+```
+
+`useEffect` se ejecuta cuando el componente `Tienda` se monta por primera vez. El array vacio indica que se ejecuta una sola vez al cargar la pantalla.
+
+En `frontend/src/api.js`, Axios tiene configurado:
+
+```javascript
+baseURL: 'http://localhost:8000/api'
+```
+
+Por lo tanto `api.get('/productos/')` termina haciendo:
+
+```text
+GET http://localhost:8000/api/productos/
+```
+
+Cuando llega la respuesta, `setProductos(data)` guarda los productos en el estado de React. Despues `productos.map((producto) => ...)` recorre la lista y genera la interfaz visual.
+
+El flujo central es:
+
+```text
+Base de datos -> Modelo Producto -> Vista productos()
+-> ProductoSerializer -> JSON -> Axios
+-> Estado productos de React -> Interfaz visual
+```
+
+Temas vistos: `path()` e `include()`, conexion entre URL y vista, `@api_view`, permisos publicos, ORM, `QuerySet`, `ModelSerializer`, `many=True`, `Response`, `axios.get`, `useEffect`, `useState` y renderizado con `.map()`.
+
+El siguiente paso logico es estudiar como React envia datos a Django para crear un producto, usando `POST`, `request.data`, validacion del serializer y `serializer.save()`.
+
+---
+
+### Conversacion 15
+
+#### Usuario
+antes de seguir, consulta
+
+porque me aparecen las carpetas en verde y amarillo? me molesta a la vista
+
+#### Asistente
+Esos colores aparecen por las decoraciones de Git de VS Code, no porque las carpetas esten danadas.
+
+Comprobe el estado del proyecto:
+
+- `backend` aparece en verde porque contiene archivos nuevos no registrados, principalmente `__pycache__`.
+- `frontend` aparece en amarillo porque hay archivos modificados dentro de `node_modules/.vite`.
+- Git marca automaticamente las carpetas segun los cambios que contienen.
+
+Para ocultarlo visualmente:
+
+1. Abrir Configuracion con `Ctrl + ,`.
+2. Buscar `git decorations`.
+3. Desactivar **Git: Decorations Enabled**.
+
+Tambien se puede agregar esto en `settings.json`:
+
+```json
+"git.decorations.enabled": false
+```
+
+Eso solamente oculta los colores; no borra ni revierte ningun archivo. Los cambios siguen existiendo en Git.
