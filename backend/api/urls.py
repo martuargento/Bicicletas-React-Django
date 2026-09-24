@@ -11,6 +11,16 @@ from .views import (
     crear_pedido,
 )
 
+# este archivo define todas las rutas del backend
+# es el equivalente a src --> routes --> auth.routes.js o products.routes.js en Node
+#
+# cada URL va a apuntar a una vista concreta en views.py
+# por ejemplo:
+# /api/auth/login/ -> login
+# /api/productos/ -> productos
+# /api/pedidos/crear/ -> crear_pedido
+#
+# en otras palabras, aca se arma el mapa de endpoints del proyecto.
 urlpatterns = [
     path('auth/registro/', registro, name='registro'),
     path('auth/login/', login, name='login'),

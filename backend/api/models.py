@@ -1,7 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# aca definimos la base de datos, las tablas que va a tener
+# este archivo define la estructura de la base de datos
+# es el equivalente a prisma --> schema.prisma en Node
+#
+# aca decimos que tablas existen, que columnas tienen y
+# como se relacionan entre si.
+#
+# En este proyecto tenemos dos tablas principales:
+# - Producto
+# - Pedido
+#
+# cada clase representa una tabla y cada atributo representa una columna.
+# esto es lo que Django usa para crear la base con SQLite.
 
 
 #vamos a tener la tabla para los Productos

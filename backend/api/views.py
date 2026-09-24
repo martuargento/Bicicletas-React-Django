@@ -9,6 +9,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Producto, Pedido
 from .serializers import ProductoSerializer, PedidoSerializer, UserSerializer
 
+# este archivo es el corazon del backend Django
+# es el equivalente a src --> controllers --> auth.controller.js en Node
+#
+# aca vive la logica de negocio del proyecto:
+# - registro
+# - login
+# - perfil
+# - productos
+# - pedidos
+# - creacion y eliminacion de productos
+#
+# en otras palabras, cuando llega una peticion, esta es la funcion
+# que decide que hacer y que respuesta devolver.
+
 
 def obtener_token_para_el_usuario(user):
     refresh = RefreshToken.for_user(user)

@@ -2,6 +2,18 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Producto, Pedido
 
+# este archivo es la capa de validación y transformación de datos
+# es el equivalente a la parte donde en Node usualmente validamos
+# inputs y convertimos datos antes de guardarlos o devolverlos.
+#
+# en Django, los serializers hacen dos cosas importantes:
+# 1. convierten modelos de Django a JSON
+# 2. validan los datos que vienen del frontend
+#
+# esto es clave porque el frontend no habla con Python directamente,
+# habla con JSON. Entonces el serializer sirve como puente entre
+# la base de datos y el cliente.
+
 #serializador para cuando cargamos un nuevo usuario
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

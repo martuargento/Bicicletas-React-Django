@@ -1,6 +1,18 @@
 from pathlib import Path
 from datetime import timedelta
 
+# este archivo es la configuración principal del proyecto Django
+# es el equivalente a src --> config --> app.js en Node
+#
+# aca se define:
+# - donde queda la base de datos
+# - que apps están activas
+# - como funciona la autenticación
+# - que rutas de frontend pueden hablar con la API
+# - como se manejan JWT y CORS
+#
+# en otras palabras, este archivo le dice a Django como debe funcionar la app.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-profesional-1234567890'
@@ -74,7 +86,14 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ]
+
 CORS_ALLOW_CREDENTIALS = True
+
+
+# Seguridad por defecto:
+# todo queda protegido, y solo los endpoints
+# que realmente deben ser públicos se abren explícitamente con AllowAny.
+# Esto mantiene el proyecto consistente y fácil de entender.
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -84,10 +103,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
-
-# Seguridad por defecto: todo queda protegido, y solo los endpoints
-# que realmente deben ser públicos se abren explícitamente con AllowAny.
-# Esto mantiene el proyecto consistente y fácil de entender.
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
