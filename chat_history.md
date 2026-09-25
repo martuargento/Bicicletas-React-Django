@@ -1817,3 +1817,562 @@ Tambien se puede agregar esto en `settings.json`:
 ```
 
 Eso solamente oculta los colores; no borra ni revierte ningun archivo. Los cambios siguen existiendo en Git.
+
+---
+
+## Fecha: 2026-09-25
+
+### Conversación 15
+
+#### Usuario
+explicame como seria el flujo, unicamente del backend ....
+
+hace de cuenta que hacemos el proyecto de 0.. que tendria que hacer primero, que despues... que comandos utilizar... etc..
+
+para lograr este proyecto
+
+#### Asistente
+**Flujo del backend desde cero**
+
+El backend quedaría organizado así:
+
+```text
+Cliente React
+    |
+    | HTTP + JSON + JWT
+    v
+Django + Django REST Framework
+    |
+    v
+Vistas en api/views.py
+    |
+    v
+Serializers: validación y conversión JSON
+    |
+    v
+Modelos Django
+    |
+    v
+SQLite: db.sqlite3
+```
+
+## 1. Crear la carpeta del backend
+
+Desde la carpeta principal del proyecto:
+
+```powershell
+mkdir backend
+cd backend
+```
+
+Crear el entorno virtual:
+
+```powershell
+py -m venv env
+```
+
+Activarlo en Windows PowerShell:
+
+```powershell
+.\env\Scripts\Activate.ps1
+```
+
+Si PowerShell bloquea la activación:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\env\Scripts\Activate.ps1
+```
+
+## 2. Instalar Django y las dependencias
+
+```powershell
+pip install django djangorestframework djangorestframework-simplejwt django-cors-headers Pillow
+```
+
+`Pillow` es necesario porque el modelo utiliza `ImageField` para las imágenes de las bicicletas.
+
+Guardar las dependencias:
+
+```powershell
+pip freeze > requirements.txt
+```
+
+El archivo debería contener, entre otras:
+
+```text
+Django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+Pillow
+```
+
+En el proyecto actual, `Pillow` no aparece en `requirements.txt`, aunque sí está instalado dentro del entorno virtual. Para instalar el proyecto desde cero conviene agregarlo.
+
+## 3. Crear el proyecto Django
+
+```powershell
+django-admin startproject django_config .
+```
+
+El punto final indica que Django debe crear el proyecto dentro de la carpeta actual.
+
+Después crear la aplicación:
+
+```powershell
+python manage.py startapp api
+```
+
+La estructura inicial sería:
+
+```text
+backend/
+    manage.py
+    django_config/
+        settings.py
+        urls.py
+    api/
+        models.py
+        views.py
+        admin.py
+        apps.py
+```
+
+## 4. Configurar Django
+
+En `settings.py` se agregan:
+
+```python
+INSTALLED_APPS = [
+    # Apps propias de Django
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Dependencias externas
+    'corsheaders',
+    'rest_framework',
+
+    # Aplicación propia
+    'api',
+]
+```
+
+También se configura:
+
+- La base de datos SQLite.
+- CORS para permitir conexiones desde React.
+- Django REST Framework.
+- JWT como sistema de autenticación.
+- Las carpetas de imágenes mediante `MEDIA_ROOT` y `MEDIA_URL`.
+
+La configuración actual permite conexiones desde:
+
+```text
+http://localhost:5173
+http://127.0.0.1:5173
+```
+
+## 5. Crear los modelos
+
+En `models.py` se define la estructura de la base de datos.
+
+El proyecto tiene dos modelos principales:
+
+### Producto
+
+Representa una bicicleta:
+
+```text
+Producto
+    id
+    nombre
+    descripcion
+    precio
+    stock
+    imagen
+    creado_en
+```
+
+### Pedido
+
+Representa una compra realizada por un usuario:
+
+```text
+Pedido
+    id
+    usuario
+    total
+    creado_en
+```
+
+La relación principal es:
+
+```text
+Un usuario puede tener muchos pedidos.
+```
+
+Esto se implementa con:
+
+```python
+usuario = models.ForeignKey(
+    User,
+    on_delete=models.CASCADE,
+    related_name='pedidos'
+)
+```
+
+## 6. Crear y aplicar las migraciones
+
+Cada vez que se crea o modifica un modelo se ejecutan:
+
+```powershell
+python manage.py makemigrations
+python manage.py migrate
+```
+
+`makemigrations` genera instrucciones para modificar la base de datos.
+
+`migrate` aplica esas instrucciones y crea las tablas.
+
+También crea las tablas internas de Django:
+
+- Usuarios.
+- Grupos.
+- Sesiones.
+- Permisos.
+- Administrador.
+
+Para verificar el estado:
+
+```powershell
+python manage.py showmigrations
+```
+
+## 7. Crear los serializers
+
+En `serializers.py` se transforma información entre Django y JSON.
+
+Por ejemplo, un objeto Django:
+
+```python
+Producto(
+    nombre='Bicicleta MTB',
+    precio=250000,
+    stock=4
+)
+```
+
+Se transforma en JSON:
+
+```json
+{
+  "id": 1,
+  "nombre": "Bicicleta MTB",
+  "descripcion": "",
+  "precio": "250000.00",
+  "stock": 4,
+  "imagen": null,
+  "creado_en": "2026-09-24T12:00:00Z"
+}
+```
+
+Los serializers también validan:
+
+- Que el nombre no esté vacío.
+- Que el precio no sea negativo.
+- Que el stock no sea negativo.
+- Que el total del pedido no sea negativo.
+
+El flujo sería:
+
+```text
+JSON recibido
+    |
+    v
+Serializer valida
+    |
+    v
+Modelo Django guarda en la base de datos
+```
+
+## 8. Crear la lógica de negocio
+
+En `views.py` se decide qué debe hacer cada endpoint.
+
+Las vistas actuales cubren:
+
+- Registro.
+- Login.
+- Perfil.
+- Listado de productos.
+- Crear productos.
+- Actualizar productos.
+- Eliminar productos.
+- Listar pedidos del usuario autenticado.
+- Crear pedidos.
+
+Por ejemplo, para crear un producto:
+
+```text
+1. Llega una petición POST.
+2. Django verifica el token JWT.
+3. La vista recibe request.data.
+4. ProductoSerializer valida los datos.
+5. serializer.save() guarda el producto.
+6. Django devuelve una respuesta JSON.
+```
+
+## 9. Configurar autenticación JWT
+
+El registro y login permiten obtener tokens.
+
+### Registro
+
+Petición:
+
+```http
+POST /api/auth/registro/
+```
+
+JSON:
+
+```json
+{
+  "username": "juan",
+  "email": "juan@email.com",
+  "password": "Password123"
+}
+```
+
+Respuesta:
+
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "juan",
+    "email": "juan@email.com",
+    "first_name": "",
+    "last_name": ""
+  },
+  "tokens": {
+    "refresh": "...",
+    "access": "..."
+  }
+}
+```
+
+### Login
+
+```http
+POST /api/auth/login/
+```
+
+JSON:
+
+```json
+{
+  "username": "juan",
+  "password": "Password123"
+}
+```
+
+El frontend debe guardar el `access token` y enviarlo en las siguientes peticiones:
+
+```http
+Authorization: Bearer TOKEN_ACCESS
+```
+
+Sin ese encabezado, las rutas protegidas devuelven:
+
+```http
+401 Unauthorized
+```
+
+## 10. Crear las URLs
+
+En `urls.py` se conectan las rutas generales:
+
+```python
+path('api/', include('api.urls'))
+```
+
+Después, en `urls.py`, se definen los endpoints concretos:
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| POST | `/api/auth/registro/` | Público |
+| POST | `/api/auth/login/` | Público |
+| GET | `/api/auth/perfil/` | Autenticado |
+| GET | `/api/productos/` | Público |
+| POST | `/api/productos/crear/` | Autenticado |
+| PUT/PATCH | `/api/productos/<id>/actualizar/` | Autenticado |
+| DELETE | `/api/productos/<id>/eliminar/` | Autenticado |
+| GET | `/api/pedidos/` | Autenticado |
+| POST | `/api/pedidos/crear/` | Autenticado |
+
+## 11. Configurar el panel administrador
+
+En `admin.py` se registran los modelos:
+
+```python
+admin.site.register(Producto)
+admin.site.register(Pedido)
+```
+
+Crear un usuario administrador:
+
+```powershell
+python manage.py createsuperuser
+```
+
+Django solicitará:
+
+```text
+Username
+Email
+Password
+```
+
+Después se puede entrar en:
+
+```text
+http://127.0.0.1:8000/admin/
+```
+
+Desde ahí se pueden administrar productos y pedidos.
+
+## 12. Ejecutar el backend
+
+Desde la carpeta `backend`:
+
+```powershell
+python manage.py runserver
+```
+
+El servidor estará disponible en:
+
+```text
+http://127.0.0.1:8000/
+```
+
+La API estará disponible bajo:
+
+```text
+http://127.0.0.1:8000/api/
+```
+
+## 13. Probar el backend
+
+Primero registrar un usuario:
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8000/api/auth/registro/ `
+  -ContentType "application/json" `
+  -Body '{"username":"juan","email":"juan@email.com","password":"Password123"}'
+```
+
+Consultar productos:
+
+```powershell
+Invoke-RestMethod `
+  -Method Get `
+  -Uri http://127.0.0.1:8000/api/productos/
+```
+
+Crear un producto usando el token:
+
+```powershell
+$headers = @{
+    Authorization = "Bearer TOKEN_ACCESS"
+}
+
+$body = @{
+    nombre = "Bicicleta MTB"
+    descripcion = "Bicicleta de montaña"
+    precio = 250000
+    stock = 5
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8000/api/productos/crear/ `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+## Flujo completo de una petición
+
+Por ejemplo, para obtener productos:
+
+```text
+React solicita:
+GET /api/productos/
+
+Django recibe la URL.
+
+django_config/urls.py
+    |
+    v
+api/urls.py
+    |
+    v
+views.productos()
+    |
+    v
+Producto.objects.all()
+    |
+    v
+ProductoSerializer
+    |
+    v
+Respuesta JSON
+```
+
+Para una petición protegida:
+
+```text
+React envía Authorization: Bearer token
+
+JWTAuthentication valida el token.
+
+Si es válido:
+    se identifica request.user
+    se ejecuta la vista
+
+Si no es válido:
+    se devuelve 401 Unauthorized
+```
+
+## Orden recomendado de construcción
+
+Desde cero, el orden sería:
+
+1. Crear la carpeta `backend`.
+2. Crear y activar el entorno virtual.
+3. Instalar Django, DRF, JWT, CORS y Pillow.
+4. Crear el proyecto Django.
+5. Crear la aplicación `api`.
+6. Configurar `settings.py`.
+7. Crear los modelos.
+8. Ejecutar `makemigrations` y `migrate`.
+9. Crear los serializers.
+10. Crear las vistas.
+11. Crear las URLs.
+12. Configurar imágenes y CORS.
+13. Registrar modelos en el admin.
+14. Crear el superusuario.
+15. Ejecutar el servidor.
+16. Probar registro y login.
+17. Probar rutas públicas.
+18. Probar rutas protegidas usando JWT.
+
+Hay dos aspectos que el backend actual todavía simplifica: el pedido solo guarda el usuario y el total, no los productos comprados; además, crear un pedido todavía no descuenta stock. Para una versión más completa habría que agregar un modelo intermedio como `DetallePedido` y controlar la actualización del inventario.
