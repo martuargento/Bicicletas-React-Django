@@ -46,15 +46,14 @@ export default function EditarProducto() {
         formData.append('imagen', imagen)
       }
 
-      await api.patch(`/productos/${id}/actualizar/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      await api.patch(`/productos/${id}/actualizar/`, formData)
 
       navigate('/dashboard')
     } catch (error) {
       const detalle = error.response?.data?.details || error.response?.data?.error || 'No se pudo actualizar el producto.'
-      console.error('Error actualizando producto:', detalle)
-      alert(detalle)
+      const mensaje = typeof detalle === 'object' ? Object.values(detalle).flat().join(' ') : detalle
+      console.error('Error actualizando producto:', error.response?.data || error)
+      alert(mensaje)
     }
   }
 

@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 #serializador para cuando cargamos un nuevo producto
 class ProductoSerializer(serializers.ModelSerializer):
-    imagen = serializers.SerializerMethodField()
+    imagen = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Producto
@@ -45,11 +45,6 @@ class ProductoSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError('El stock no puede ser negativo.')
         return value
-
-    def get_imagen(self, obj):
-        if obj.imagen and hasattr(obj.imagen, 'url'):
-            return obj.imagen.url
-        return None
 
     
 

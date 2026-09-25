@@ -43,17 +43,16 @@ export default function Dashboard() {
         formData.append('imagen', imagen)
       }
 
-      await api.post('/productos/crear/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      await api.post('/productos/crear/', formData)
 
       setForm({ nombre: '', descripcion: '', precio: '', stock: '' })
       setImagen(null)
       await cargarProductos()
     } catch (error) {
       const detalle = error.response?.data?.details || error.response?.data?.error || 'No se pudo guardar el producto.'
-      console.error(detalle)
-      alert(detalle)
+      const mensaje = typeof detalle === 'object' ? Object.values(detalle).flat().join(' ') : detalle
+      console.error(error.response?.data || error)
+      alert(mensaje)
     } finally {
       setLoading(false)
     }
