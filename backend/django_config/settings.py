@@ -1,17 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
 
-# este archivo es la configuración principal del proyecto Django
-# es el equivalente a src --> config --> app.js en Node
-#
-# aca se define:
-# - donde queda la base de datos
-# - que apps están activas
-# - como funciona la autenticación
-# - que rutas de frontend pueden hablar con la API
-# - como se manejan JWT y CORS
-#
-# en otras palabras, este archivo le dice a Django como debe funcionar la app.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
