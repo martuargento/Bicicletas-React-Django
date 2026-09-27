@@ -135,11 +135,8 @@ def pedidos(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def crear_pedido(request):
-    data = request.data.copy()
-    data['usuario'] = request.user.id
-
-    serializer = PedidoSerializer(data=data)
+    serializer = PedidoSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(usuario=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
